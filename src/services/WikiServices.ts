@@ -1,6 +1,7 @@
-import { Controller, Get, HttpStatus, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { WikiHelper } from 'src/helper/WikiHelper';
 import { AuthGuard } from './AuthGuard';
+import { IVaccine } from 'src/model/interfaces/db/IVaccine';
 
 @Controller('wiki')
 export class WikiServices {
@@ -31,6 +32,20 @@ export class WikiServices {
       });
     } catch (ex) {
       return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @Post('vaccine/add')
+  async addVaccines(@Res() response, @Body('dto') dto: IVaccine[]){
+    try{
+      const results = await this.helper.addVaccine(dto);
+      return response.status(HttpStatus.OK).json({
+        data: results
+      });
+    }
+    catch(ex){
+        console.log(ex)
+        return response.status(ex.status).json(ex.response);
     }
   }
 }

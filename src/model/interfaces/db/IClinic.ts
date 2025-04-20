@@ -7,4 +7,5 @@ export interface IClinic{
     geoLatitude: string;
     geoLongtitude: string;
     availableVaccines: IVaccine[];
+    distanceFromUser: string | null;
 }

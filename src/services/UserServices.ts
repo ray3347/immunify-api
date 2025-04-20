@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpStatus, Param, Post, Res, UseGuards } from "
 import { UserHelper } from "src/helper/UserHelper";
 import { IUserLoginData } from "src/model/interfaces/requests/IUserLoginData";
 import { AuthGuard } from "./AuthGuard";
+import { IUser } from "src/model/interfaces/db/IUser";
 
 @Controller('user')
 export class UserServices{
@@ -32,6 +33,22 @@ export class UserServices{
 
             return response.status(HttpStatus.OK).json({
                 data: loginObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('entity/add')
+    async addUser(@Res() response, @Body('accountId') accountId: string, @Body('dto') dto: IUser){
+        try{
+            const addUserObj = await this.helper.addUser(accountId, dto);
+
+            return response.status(HttpStatus.OK).json({
+                data: addUserObj
             });
         }
         catch(ex){

@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { userAccountTypes } from 'src/constants/types';
 import { db } from 'src/model/entities/firebase';
 import { IAccount, IUserAccount } from 'src/model/interfaces/db/IAccount';
@@ -62,9 +62,43 @@ export class UserHelper {
     }
   }
 
-//   async getUserData(email: string): Promise<any> {}
+  async addUser(accountId: string, dto: IUser): Promise<any>{
+    try{
+      var userRes: any = null;
+      const dbData = await getDocs(
+        query(
+          collection(db, 'MsAccount'),
+          where('id', "==", accountId)
+        ),
+      );
 
-//   async addUserData(accountId: string, user: IUser): Promise<any> {
+      if(dbData == null){
+        throw new UnauthorizedException("Invalid Account");
+      }
 
-//   }
+      const docSnap = dbData.docs[0];
+      const docRef = doc(db, 'MsAccount', docSnap.id);
+
+      // dbData.forEach((x) => {
+      //   // const user = x.data();
+      //   userRes = x.data();
+      //   userRes.secretKey = "";
+      //   userRes.userList.push(dto);
+      //   // return user;
+      // });
+
+      var crypto = require('crypto');
+      const newId = crypto.randomUUID();
+      await updateDoc(docRef,  {
+        userList: arrayUnion({
+          ...dto,
+          id: newId
+        })
+      })
+
+      return userRes;
+    }catch (ex) {
+      throw ex;
+    }
+  }
 }

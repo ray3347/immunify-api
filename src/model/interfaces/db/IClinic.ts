@@ -1,3 +1,5 @@
+import { IClinicAppointment } from "./IAppointment";
+import { IReview } from "./IReview";
 import { IVaccine } from "./IVaccine";
 
 export interface IClinic{
@@ -6,6 +8,18 @@ export interface IClinic{
     address: string;
     geoLatitude: string;
     geoLongtitude: string;
-    availableVaccines: IVaccine[];
+    availableVaccines: IVaccineStock[];
     distanceFromUser: string | null;
+    websiteURL: string;
+    googleMapsURL: string;
+    reviews: IReview[];
+    openTime: string;
+    closeTime: string;
+    scheduledAppointments: IClinicAppointment[];
+}
+
+export interface IVaccineStock{
+    id: string;
+    vaccine: IVaccine;
+    stock: number;
 }

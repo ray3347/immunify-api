@@ -7,4 +7,5 @@ export interface IVaccine{
     doses: number;
     doseInterval: number;
     relatedDiseases: IDisease[];
+    informationSummary: string[];
 }

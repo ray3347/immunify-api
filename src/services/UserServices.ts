@@ -56,4 +56,52 @@ export class UserServices{
             return response.status(ex.status).json(ex.response);
         }
     }
+
+    @UseGuards(AuthGuard)
+    @Post('entity/edit')
+    async editUser(@Res() response, @Body('accountId') accountId: string, @Body('dto') dto: IUser){
+        try{
+            const editUserObj = await this.helper.editUser(accountId, dto);
+
+            return response.status(HttpStatus.OK).json({
+                data: editUserObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('entity/delete')
+    async deleteUser(@Res() response, @Body('accountId') accountId: string, @Body('userId') userId: string){
+        try{
+            const deleteUserObj = await this.helper.deleteUser(accountId, userId);
+
+            return response.status(HttpStatus.OK).json({
+                data: deleteUserObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('get/schedule/upcoming')
+    async getUpcomingVaccineSchedule(@Res() response, @Param('accountId') accountId: string){
+        try{
+            const upcomingScheduleObj = await this.helper.getUpcomingVaccineSchedule(accountId);
+
+            return response.status(HttpStatus.OK).json({
+                data: upcomingScheduleObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
 }

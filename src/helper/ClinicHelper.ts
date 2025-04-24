@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from 'src/model/entities/firebase';
-import { IClinic } from 'src/model/interfaces/db/IClinic';
+import { IClinic, IVaccineStock } from 'src/model/interfaces/db/IClinic';
+import { IVaccine } from 'src/model/interfaces/db/IVaccine';
 import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
 import { ILocationData } from 'src/model/interfaces/requests/ILocationData';
 import { distanceCalculator } from 'src/utilities/distanceCalculator';
@@ -45,11 +46,14 @@ export class ClinicHelper {
         }) - distanceCalculator(userLocationData as ILocationData, {
             latitude: parseInt(b.geoLatitude),
             longtitude: parseInt(b.geoLongtitude)
-        }));
+        })).slice(0,5);
       }
       return clinicList;
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }
+  }
+
+  async modifyClinicVaccineAvailability(clinicId: string, dto: IVaccineStock[]){
   }
 }

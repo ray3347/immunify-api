@@ -1,4 +1,4 @@
-import { IAppointment } from "./IAppointment";
+import { IAppointment, IClinicAppointment } from "./IAppointment";
 import { IClinic } from "./IClinic";
 import { IUser } from "./IUser";
 
@@ -15,5 +15,4 @@ export interface IUserAccount extends IAccount{
 
 export interface IClinicAccount extends IAccount{
     clinic: IClinic;
-    scheduledAppointments: IAppointment[];
 }

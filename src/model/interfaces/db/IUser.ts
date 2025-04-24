@@ -1,11 +1,20 @@
-import { IAppointment } from "./IAppointment";
+import { IAppointment, IUserAppointment } from "./IAppointment";
 import { ISchedule } from "./ISchedule";
+import { IVaccine } from "./IVaccine";
 
 export interface IUser{
     id: string;
-    // email: string;
     fullName: string;
-    activeAppointments: IAppointment[];
-    inactiveAppointments: IAppointment[];
-    suggestedVaccineSchedules: ISchedule[];
+    dateOfBirth: Date;
+    gender: string;
+    scheduledAppointments: IUserAppointment[];
+    vaccinationHistory: IVaccinationHistory[];
+}
+
+export interface IVaccinationHistory{
+    id: string;
+    vaccine: IVaccine;
+    vaccinationDate: Date;
+    doseNumber: number;
+    certificateUri: string;
 }

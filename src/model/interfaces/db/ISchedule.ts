@@ -5,5 +5,4 @@ export interface ISchedule{
     id: string;
     scheduledDate: Date;
     vaccine: IVaccine;
-    disease: IDisease;
 }

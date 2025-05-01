@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Param, Post, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Param, Post, Query, Res, UseGuards } from "@nestjs/common";
 import { UserHelper } from "src/helper/UserHelper";
 import { IUserLoginData } from "src/model/interfaces/requests/IUserLoginData";
 import { AuthGuard } from "./AuthGuard";
@@ -91,7 +91,7 @@ export class UserServices{
 
     @UseGuards(AuthGuard)
     @Get('get/schedule/upcoming')
-    async getUpcomingVaccineSchedule(@Res() response, @Param('accountId') accountId: string){
+    async getUpcomingVaccineSchedule(@Res() response, @Query('accountId') accountId: string){
         try{
             const upcomingScheduleObj = await this.helper.getUpcomingVaccineSchedule(accountId);
 

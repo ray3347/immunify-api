@@ -118,7 +118,7 @@ export class AppointmentHelper {
       var clinicAppointment: IClinicAppointment | null = null;
       const data: IUserAccount = docSnap.data() as IUserAccount;
       const mapUser = data.userList.map((user, idx) => {
-        if(user.id == dto.userId){
+        if(dto.userId.includes(user.id)){
             const newUserAppointment: IUserAppointment = {
                 ...newAppointment,
                 clinic: clinic.docs[0].data() as IClinic

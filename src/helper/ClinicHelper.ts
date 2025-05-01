@@ -55,5 +55,11 @@ export class ClinicHelper {
   }
 
   async modifyClinicVaccineAvailability(clinicId: string, dto: IVaccineStock[]){
+    try{
+
+    }
+    catch(ex){
+      throw new UnauthorizedException(ex);
+    }
   }
 }

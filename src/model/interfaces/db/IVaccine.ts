@@ -1,3 +1,4 @@
+import { IClinic } from "./IClinic";
 import { IDisease } from "./IDisease";
 
 export interface IVaccine{
@@ -8,4 +9,6 @@ export interface IVaccine{
     doseInterval: number;
     relatedDiseases: IDisease[];
     informationSummary: string[];
+    minimumAge: number;
+    availableAt: IClinic[];
 }

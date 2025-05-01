@@ -61,7 +61,7 @@ export class UserHelper {
         ),
       );
 
-      if (dbData.size > 0) {
+      if (dbData.size == 0) {
         throw new UnauthorizedException(
           'Email or Password Incorrect, please try again.',
         );
@@ -175,6 +175,7 @@ export class UserHelper {
 
   async getUpcomingVaccineSchedule(accountId: string) {
     try {
+      console.log("babi", accountId)
       const dbData = await getDocs(
         query(collection(db, 'MsAccount'), where('id', '==', accountId)),
       );
@@ -187,7 +188,7 @@ export class UserHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: any = docSnap.data();
 
-      const mapUser = data.userList.map((user: IUser, idx) => {
+      const mapUser:any[] = data.userList.map((user: IUser, idx) => {
         const vaccineMap = new Map<string, IVaccinationHistory[]>();
 
         for (const record of user.vaccinationHistory) {
@@ -236,10 +237,20 @@ export class UserHelper {
           }
         }
 
-        return nextVaccine;
+        if(nextVaccine != null){
+          console.log("test")
+          return nextVaccine;
+        }
+
+        // return;
       });
 
-      return mapUser;
+      if(mapUser.length > 0){
+        console.log("babi", mapUser)
+        return mapUser;
+      }
+
+      return [];
     } catch (ex) {
       throw ex;
     }

@@ -12,5 +12,11 @@
             "dest": "src/main.ts",
             "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"]
         }
+    ],
+    "rewrites": [
+      {
+        "source": "/(.*)",
+        "destination": "src/main.ts"
+      }
     ]
 }

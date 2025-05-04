@@ -9,14 +9,14 @@ export default async function handler(req, res) {
   if (!app) {
     app = await NestFactory.create(AppModule);
 
-    app.enableCors({
-      origin: process.env.CORS_ORIGINS || true,
-      credentials: true,
-    });
+    // app.enableCors({
+    //   origin: process.env.CORS_ORIGINS || true,
+    //   credentials: true,
+    // });
 
     const config = new DocumentBuilder()
-      .setTitle('EasyNotes API')
-      .setDescription('Documentation for EasyNotes API')
+      .setTitle('Immunify API')
+      .setDescription('Documentation for Immunify API')
       .setVersion('1.0')
       .build();
     const document = SwaggerModule.createDocument(app, config);

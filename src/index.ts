@@ -15,12 +15,12 @@ export default async function handler(req, res) {
     //   credentials: true,
     // });
 
-    // const config = new DocumentBuilder()
-    //   .setTitle('Immunify API')
-    //   .setDescription('Documentation for Immunify API')
-    //   .setVersion('1.0')
-    //   .build();
-    // const document = SwaggerModule.createDocument(app, config);
+    const config = new DocumentBuilder()
+      .setTitle('Immunify API')
+      .setDescription('Documentation for Immunify API')
+      .setVersion('1.0')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
 
     // app.useGlobalPipes(
     //   new ValidationPipe({
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     //   }),
     // );
 
-    // SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup('api', app, document);
 
     await app.listen(process.env.PORT ?? 7000);
     // This is important

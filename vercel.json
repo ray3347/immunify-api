@@ -9,14 +9,14 @@
         }
       },
       {
-        "src": "dist/main.ts",
+        "src": "dist/index.ts",
         "use": "@vercel/node"
       }
     ],
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "dist/main.ts"
+        "dest": "dist/index.ts"
       }
     ]
   }

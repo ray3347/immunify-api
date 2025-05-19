@@ -175,7 +175,7 @@ export class UserHelper {
 
   async getUpcomingVaccineSchedule(accountId: string) {
     try {
-      console.log("babi", accountId)
+      // console.log("babi", accountId)
       const dbData = await getDocs(
         query(collection(db, 'MsAccount'), where('id', '==', accountId)),
       );
@@ -254,5 +254,9 @@ export class UserHelper {
     } catch (ex) {
       throw ex;
     }
+  }
+
+  async getAppointmentDetails(appointmentId: string){
+
   }
 }

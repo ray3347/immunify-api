@@ -12,7 +12,6 @@ export class WikiHelper {
   // get
   async getVaccineList() {
     try {
-      // console.log("ANJING")
       var vaccineList: IVaccine[] = [];
       const dbData = await getDocs(collection(db, 'MsVaccine'));
       dbData.forEach((x) => {
@@ -49,12 +48,14 @@ export class WikiHelper {
           id: newId,
           doses: vax.doses,
           doseInterval: vax.doseInterval,
-          relatedDiseases: vax.relatedDiseases,
           vaccineInformation: vax.vaccineInformation,
           vaccineName: vax.vaccineName,
           informationSummary: vax.informationSummary,
           availableAt: vax.availableAt,
-          minimumAge: vax.minimumAge
+          minimumAge: vax.minimumAge,
+          price: vax.price,
+          sideEffects: vax.sideEffects,
+          image: vax.image
         };
 
         queryList.push(newVax);

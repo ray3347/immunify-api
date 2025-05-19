@@ -10,9 +10,10 @@ export interface IAppointment{
     scheduledDate: Date;
     scheduledTime: string;
     scheduledEndTime: string;
-    isComplete: boolean;
-    isCanceled: boolean;
-    isAllocated: boolean;
+    status: string;
+    // isComplete: boolean;
+    // isCanceled: boolean;
+    // isAllocated: boolean;
     vaccine: IVaccine;
 }
 

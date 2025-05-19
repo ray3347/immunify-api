@@ -62,4 +62,12 @@ export class ClinicHelper {
       throw new UnauthorizedException(ex);
     }
   }
+
+  async addClinic(request: IClinic){
+
+  }
+
+  async bindClinicAccount(accountId: string, clinic: IClinic){
+    
+  }
 }

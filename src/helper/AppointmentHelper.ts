@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { arrayUnion, collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { request } from 'http';
+import { appointmentStatusTypes } from '../constants/types';
 import { db } from 'src/model/entities/firebase';
 import { IUserAccount } from 'src/model/interfaces/db/IAccount';
 import { IAppointment, IClinicAppointment, IUserAppointment } from 'src/model/interfaces/db/IAppointment';
@@ -43,7 +44,8 @@ export class AppointmentHelper {
             apptDate.getFullYear() === selectedDate.getFullYear() &&
             apptDate.getMonth() === selectedDate.getMonth() &&
             apptDate.getDate() === selectedDate.getDate() &&
-            !appt.isCanceled
+            appt.status !== appointmentStatusTypes.cancelled
+            // !appt.isCanceled
           );
         });
 
@@ -106,9 +108,7 @@ export class AppointmentHelper {
 
       const newAppointment : IAppointment = {
         id: newId,
-        isAllocated: false,
-        isCanceled: false,
-        isComplete: false,
+        status: appointmentStatusTypes.pending,
         scheduledDate: dto.selectedDate,
         scheduledTime: dto.selectedStartTime,
         scheduledEndTime: "",

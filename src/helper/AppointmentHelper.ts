@@ -153,7 +153,11 @@ export class AppointmentHelper {
   }
 
   // clinic
-  async allocateAppointment() {
+  async allocateAppointment(appointmentId: string, clinicId: string) {
+
+  }
+
+  async completeAppointment(appointmentId: string, clinicId: string){
 
   }
 }

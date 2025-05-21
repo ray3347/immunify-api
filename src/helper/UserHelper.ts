@@ -23,6 +23,7 @@ import { IUserLoginData } from 'src/model/interfaces/requests/IUserLoginData';
 export class UserHelper {
   async register(dto: IUserLoginData): Promise<any> {
     try {
+      var userRes: any = null;
       const dbData = await getDocs(
         query(
           collection(db, 'MsAccount'),
@@ -44,7 +45,16 @@ export class UserHelper {
           userList: [],
         };
         await addDoc(collection(db, 'MsAccount'), newUser);
+
+        const returnObj = {
+          ...newUser,
+          secretKey: ""
+        }
+
+        userRes = returnObj;
       }
+
+      return userRes;
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }

@@ -3,12 +3,15 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { ClinicHelper } from 'src/helper/ClinicHelper';
 import { AuthGuard } from './AuthGuard';
 import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
+import { IClinic } from '../model/interfaces/db/IClinic';
 
 @Controller('clinic')
 export class ClinicServices {
@@ -19,6 +22,34 @@ export class ClinicServices {
   async get(@Res() response, @Body('dto') dto: IClinicFilterRequestDTO) {
     try {
       const dtoData = await this.helper.getClinic(dto);
+
+      return response.status(HttpStatus.OK).json({
+        data: dtoData,
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('add')
+  async add(@Res() response, @Body('dto') dto: IClinic) {
+    try {
+      const dtoData = await this.helper.addClinic(dto);
+
+      return response.status(HttpStatus.OK).json({
+        data: dtoData,
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('bind')
+  async bindClinicAccount(@Res() response, @Query('accountId') accountId: string ,@Body('dto') dto: IClinic) {
+    try {
+      const dtoData = await this.helper.bindClinicAccount(accountId, dto);
 
       return response.status(HttpStatus.OK).json({
         data: dtoData,

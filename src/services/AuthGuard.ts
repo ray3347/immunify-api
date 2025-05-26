@@ -13,6 +13,8 @@ export class AuthGuard implements CanActivate {
         }
         const authToken = authorization.replace(/bearer/gim, '').trim();
         const decodedToken = await atob(authToken);
+        console.log(authToken);
+        console.log(process.env.ROUTE_AUTH);
         if (decodedToken == process.env.ROUTE_AUTH) {
           return true;
         } else {

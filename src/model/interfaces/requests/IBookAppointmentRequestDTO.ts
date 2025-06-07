@@ -6,4 +6,5 @@ export interface IBookAppointmentRequestDTO{
     selectedDate: Date;
     selectedStartTime: string;
     vaccine: IVaccine;
+    doseNumber: number;
 }

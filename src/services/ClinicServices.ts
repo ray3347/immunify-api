@@ -12,6 +12,8 @@ import { ClinicHelper } from 'src/helper/ClinicHelper';
 import { AuthGuard } from './AuthGuard';
 import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
 import { IClinic } from '../model/interfaces/db/IClinic';
+import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
+
 
 @Controller('clinic')
 export class ClinicServices {
@@ -55,6 +57,21 @@ export class ClinicServices {
         data: dtoData,
       });
     } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('login')
+  async login(@Res() response, @Query('userData') userData: IUserLoginData){
+    try{
+      const dtoData = await this.helper.clinicLogin(userData);
+
+      return response.status(HttpStatus.OK).json({
+        data: dtoData
+      });
+    }
+    catch(ex){
       return response.status(ex.status).json(ex.response);
     }
   }

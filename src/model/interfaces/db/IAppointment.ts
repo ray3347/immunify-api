@@ -22,5 +22,6 @@ export interface IUserAppointment extends IAppointment{
 }
 
 export interface IClinicAppointment extends IAppointment{
+    userAccountId: string;
     user: IUser;
 }

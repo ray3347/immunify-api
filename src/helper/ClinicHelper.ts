@@ -1,5 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { addDoc, arrayUnion, collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 import { db } from 'src/model/entities/firebase';
 import { IClinic, IVaccineStock } from 'src/model/interfaces/db/IClinic';
 import { IVaccine } from 'src/model/interfaces/db/IVaccine';
@@ -8,6 +17,7 @@ import { ILocationData } from 'src/model/interfaces/requests/ILocationData';
 import { distanceCalculator } from 'src/utilities/distanceCalculator';
 import { userAccountTypes } from '../constants/types';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
+import { IClinicAccount } from '../model/interfaces/db/IAccount';
 
 @Injectable()
 export class ClinicHelper {
@@ -69,19 +79,96 @@ export class ClinicHelper {
     }
   }
 
-  async modifyClinicVaccineAvailability(
-    clinicId: string,
-    dto: IVaccineStock[],
-  ) {
+  async modifyClinicVaccineAvailability(clinicId: string, dto: IVaccineStock) {
     try {
+      var clinicRes: IClinicAccount[] = [];
+      const dbData = await getDocs(
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.clinic),
+          where('id', '==', clinicId),
+        ),
+      );
 
+      // const clinicData = dbData.forEach((x)=>{
+      //   clinicRes.push(x.data() as IClinicAccount)
+      // })
+      var count = 0;
+      const docSnap = dbData.docs[0];
+      const docRef = doc(db, 'MsAccount', docSnap.id);
+      const data: IClinicAccount = docSnap.data() as IClinicAccount;
+      const update = data.clinic.availableVaccines.map((vax, idx) => {
+        // if (user.id == dto.id) {
+        //   user.fullName = dto.fullName;
+        //   user.dateOfBirth = dto.dateOfBirth;
+        //   user.gender = dto.gender;
+        // }
+        // return user;
+        if (vax.id == dto.id) {
+          vax.stock = dto.stock;
+          count++;
+        }
+        return vax;
+      });
+
+      if (count == 0) {
+        var crypto = require('crypto');
+        const newId = crypto.randomUUID();
+        const newVaccineStock: IVaccineStock = {
+          id: newId,
+          vaccine: dto.vaccine,
+          stock: dto.stock
+        }
+        await updateDoc(docRef, {
+          "clinic.availableVaccines": arrayUnion({
+            newVaccineStock
+          })
+        });
+        // await updateDoc(docRef, {
+        //   : arrayUnion({
+        //     ...dto,
+        //     id: newId,
+        //   }),
+        // });
+      } else {
+        await updateDoc(docRef, {
+          "clinic.availableVaccines": update
+        });
+      }
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }
   }
 
-  async clinicLogin(dto: IUserLoginData){
+  async clinicLogin(dto: IUserLoginData) {
+    try {
+      var userRes: any = null;
+      const dbData = await getDocs(
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.clinic),
+          where('email', '==', dto.hashedUsername),
+          where('secretKey', '==', dto.hashedPassword),
+        ),
+      );
 
+      if (dbData.size == 0) {
+        throw new UnauthorizedException(
+          'Email or Password Incorrect, please try again.',
+        );
+      }
+      // console.log(dbData)
+      dbData.forEach((x) => {
+        // const user = x.data();
+        userRes = x.data();
+        userRes.secretKey = '';
+        // return user;
+      });
+      // console.log(userRes)
+      return userRes;
+    } catch (ex) {
+      throw ex;
+    }
   }
 
   async addClinic(request: IClinic) {
@@ -146,7 +233,5 @@ export class ClinicHelper {
     }
   }
 
-  async getClinicDashboardData(clinicId: string){
-
-  }
+  async getClinicDashboardData(clinicId: string) {}
 }

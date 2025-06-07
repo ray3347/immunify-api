@@ -89,10 +89,6 @@ export class ClinicHelper {
           where('id', '==', clinicId),
         ),
       );
-
-      // const clinicData = dbData.forEach((x)=>{
-      //   clinicRes.push(x.data() as IClinicAccount)
-      // })
       var count = 0;
       const docSnap = dbData.docs[0];
       const docRef = doc(db, 'MsAccount', docSnap.id);
@@ -117,12 +113,12 @@ export class ClinicHelper {
         const newVaccineStock: IVaccineStock = {
           id: newId,
           vaccine: dto.vaccine,
-          stock: dto.stock
-        }
+          stock: dto.stock,
+        };
         await updateDoc(docRef, {
-          "clinic.availableVaccines": arrayUnion({
-            newVaccineStock
-          })
+          'clinic.availableVaccines': arrayUnion({
+            newVaccineStock,
+          }),
         });
         // await updateDoc(docRef, {
         //   : arrayUnion({
@@ -132,9 +128,13 @@ export class ClinicHelper {
         // });
       } else {
         await updateDoc(docRef, {
-          "clinic.availableVaccines": update
+          'clinic.availableVaccines': update,
         });
       }
+
+      const res = await this.getClinicById(clinicId);
+
+      return res;
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }
@@ -160,7 +160,7 @@ export class ClinicHelper {
       // console.log(dbData)
       dbData.forEach((x) => {
         // const user = x.data();
-        userRes = x.data();
+        userRes = x.data() as IClinicAccount;
         userRes.secretKey = '';
         // return user;
       });
@@ -233,5 +233,22 @@ export class ClinicHelper {
     }
   }
 
-  async getClinicDashboardData(clinicId: string) {}
+  async getClinicById(clinicId: string) {
+    const res = await getDocs(
+      query(
+        collection(db, 'MsAccount'),
+        where('type', '==', userAccountTypes.clinic),
+        where('id', '==', clinicId),
+      ),
+    );
+    const resSnap = res.docs[0];
+    const resRef = doc(db, 'MsAccount', resSnap.id);
+    const resData: IClinicAccount = resSnap.data() as IClinicAccount;
+
+    const returnObj: IClinicAccount = {
+      ...resData,
+      secretKey: '',
+    };
+    return returnObj;
+  }
 }

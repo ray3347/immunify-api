@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -41,14 +42,56 @@ export class AppointmentServices {
   @Post('book')
   async bookAppointment(
     @Res() response,
-    @Body('accountId') accountId: string,
+    @Query('accountId') accountId: string,
     @Body('dto') dto: IBookAppointmentRequestDTO
   ) {
     try {
       const dtoData = await this.helper.bookAppointment(accountId, dto);
 
       return response.status(HttpStatus.OK).json({
-        data: dtoData,
+        data: "success",
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('allocate')
+  async allocateAppointment(@Res() response, @Query('clinicId') clinicId: string, @Query('appointmentId') appointmentId: string){
+    try {
+      const dtoData = await this.helper.allocateAppointment(appointmentId, clinicId);
+
+      return response.status(HttpStatus.OK).json({
+        data: "success",
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('complete')
+  async completeAppointment(@Res() response, @Query('clinicId') clinicId: string, @Query('appointmentId') appointmentId: string){
+    try {
+      const dtoData = await this.helper.completeAppointment(appointmentId, clinicId);
+
+      return response.status(HttpStatus.OK).json({
+        data: "success",
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('cancel')
+  async cancelAppointment(@Res() response, @Query('clinicId') clinicId: string, @Query('appointmentId') appointmentId: string){
+    try {
+      const dtoData = await this.helper.cancelAppointment(appointmentId, clinicId);
+
+      return response.status(HttpStatus.OK).json({
+        data: "success",
       });
     } catch (ex) {
       return response.status(ex.status).json(ex.response);

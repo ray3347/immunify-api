@@ -104,4 +104,20 @@ export class UserServices{
             return response.status(ex.status).json(ex.response);
         }
     }
+
+    @UseGuards(AuthGuard)
+    @Get('id')
+    async getUserById(@Res() response, @Query('accountId') accountId: string){
+        try{
+            const userObj = await this.helper.getUserById(accountId);
+
+            return response.status(HttpStatus.OK).json({
+                data: userObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
 }

@@ -48,8 +48,8 @@ export class UserHelper {
 
         const returnObj = {
           ...newUser,
-          secretKey: ""
-        }
+          secretKey: '',
+        };
 
         userRes = returnObj;
       }
@@ -198,7 +198,7 @@ export class UserHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: any = docSnap.data();
 
-      const mapUser:any[] = data.userList.map((user: IUser, idx) => {
+      const mapUser: any[] = data.userList.map((user: IUser, idx) => {
         const vaccineMap = new Map<string, IVaccinationHistory[]>();
 
         for (const record of user.vaccinationHistory) {
@@ -247,16 +247,16 @@ export class UserHelper {
           }
         }
 
-        if(nextVaccine != null){
-          console.log("test")
+        if (nextVaccine != null) {
+          console.log('test');
           return nextVaccine;
         }
 
         // return;
       });
 
-      if(mapUser.length > 0){
-        console.log("babi", mapUser)
+      if (mapUser.length > 0) {
+        console.log('babi', mapUser);
         return mapUser;
       }
 
@@ -266,7 +266,28 @@ export class UserHelper {
     }
   }
 
-  async getAppointmentDetails(appointmentId: string){
+  async getAppointmentDetails(appointmentId: string) {}
 
+  async getUserById(accountId: string) {
+    try {
+      const res = await getDocs(
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.user),
+          where('id', '==', accountId),
+        ),
+      );
+      const resSnap = res.docs[0];
+      const resRef = doc(db, 'MsAccount', resSnap.id);
+      const resData: IUserAccount = resSnap.data() as IUserAccount;
+
+      const returnObj: IUserAccount = {
+        ...resData,
+        secretKey: '',
+      };
+      return returnObj;
+    } catch (ex) {
+      throw ex;
+    }
   }
 }

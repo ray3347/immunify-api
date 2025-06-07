@@ -11,9 +11,8 @@ import {
 import { ClinicHelper } from 'src/helper/ClinicHelper';
 import { AuthGuard } from './AuthGuard';
 import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
-import { IClinic } from '../model/interfaces/db/IClinic';
+import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
-
 
 @Controller('clinic')
 export class ClinicServices {
@@ -49,7 +48,11 @@ export class ClinicServices {
 
   @UseGuards(AuthGuard)
   @Post('bind')
-  async bindClinicAccount(@Res() response, @Query('accountId') accountId: string ,@Body('dto') dto: IClinic) {
+  async bindClinicAccount(
+    @Res() response,
+    @Query('accountId') accountId: string,
+    @Body('dto') dto: IClinic,
+  ) {
     try {
       const dtoData = await this.helper.bindClinicAccount(accountId, dto);
 
@@ -63,15 +66,50 @@ export class ClinicServices {
 
   @UseGuards(AuthGuard)
   @Post('login')
-  async login(@Res() response, @Query('userData') userData: IUserLoginData){
-    try{
+  async login(@Res() response, @Query('userData') userData: IUserLoginData) {
+    try {
       const dtoData = await this.helper.clinicLogin(userData);
 
       return response.status(HttpStatus.OK).json({
-        data: dtoData
+        data: dtoData,
       });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
     }
-    catch(ex){
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('vaccine-stock/modify')
+  async modifyVaccineStock(
+    @Res() response,
+    @Query('clinicId') clinicId: string,
+    @Query('vaccineStock') vaccineStock: IVaccineStock,
+  ) {
+    try {
+      const dtoData = await this.helper.modifyClinicVaccineAvailability(
+        clinicId,
+        vaccineStock,
+      );
+
+      return response.status(HttpStatus.OK).json({
+        data: dtoData,
+      });
+    } catch (ex) {
+      return response.status(ex.status).json(ex.response);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('id')
+  async getUserById(@Res() response, @Query('accountId') accountId: string) {
+    try {
+      const userObj = await this.helper.getClinicById('accountId');
+
+      return response.status(HttpStatus.OK).json({
+        data: userObj,
+      });
+    } catch (ex) {
+      console.log(ex);
       return response.status(ex.status).json(ex.response);
     }
   }

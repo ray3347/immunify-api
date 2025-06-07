@@ -182,7 +182,7 @@ export class AppointmentHelper {
       const patientData = data.clinic.scheduledAppointments.map(
         async (app) => {
           if (app.id == appointmentId) {
-            app.status = appointmentStatusTypes.approved;
+            app.status = appointmentStatusTypes.scheduled;
             count++;
 
             // update user
@@ -202,7 +202,7 @@ export class AppointmentHelper {
               if (um.id == app.user.id) {
                 const updateAppointment = um.scheduledAppointments.map((ua, id) => {
                   if (ua.id == appointmentId) {
-                    ua.status = appointmentStatusTypes.approved;
+                    ua.status = appointmentStatusTypes.scheduled;
                     uCount++;
                   }
                   return ua;

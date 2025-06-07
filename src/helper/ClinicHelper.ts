@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   doc,
@@ -18,6 +19,7 @@ import { distanceCalculator } from 'src/utilities/distanceCalculator';
 import { userAccountTypes } from '../constants/types';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
 import { IClinicAccount } from '../model/interfaces/db/IAccount';
+import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
 
 @Injectable()
 export class ClinicHelper {
@@ -79,21 +81,21 @@ export class ClinicHelper {
     }
   }
 
-  async modifyClinicVaccineAvailability(clinicId: string, dto: IVaccineStock) {
+  async modifyClinicVaccineAvailability(accountId: string, dto: IVaccineStock) {
     try {
       var clinicRes: IClinicAccount[] = [];
       const dbData = await getDocs(
         query(
           collection(db, 'MsAccount'),
           where('type', '==', userAccountTypes.clinic),
-          where('id', '==', clinicId),
+          where('id', '==', accountId),
         ),
       );
       var count = 0;
       const docSnap = dbData.docs[0];
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
-      const update = data.clinic.availableVaccines.map((vax, idx) => {
+      const update = data.clinic.availableVaccines.map(async (vax, idx) => {
         // if (user.id == dto.id) {
         //   user.fullName = dto.fullName;
         //   user.dateOfBirth = dto.dateOfBirth;
@@ -102,10 +104,34 @@ export class ClinicHelper {
         // return user;
         if (vax.id == dto.id) {
           vax.stock = dto.stock;
+
+          // if 0 remove availability on vaccine
+          if (dto.stock == 0) {
+            const vaccineData = await getDocs(
+              query(
+                collection(db, 'MsVaccine'),
+                where('id', '==', dto.vaccine.id),
+              ),
+            );
+            const vaxSnap = vaccineData.docs[0];
+            const vaxRef = doc(db, 'MsVaccine', vaxSnap.id);
+            const vax: IVaccine = vaxSnap.data() as IVaccine;
+
+            const removeClinic = vax.availableAt.find((clinic)=>clinic.id == data.clinic.id);
+
+            if(removeClinic){
+              await updateDoc(vaxRef,{
+                availableAt: arrayRemove(removeClinic)
+              })
+            }
+          }
+
           count++;
         }
         return vax;
       });
+
+      const updateRes = await Promise.all(update)
 
       if (count == 0) {
         var crypto = require('crypto');
@@ -115,24 +141,34 @@ export class ClinicHelper {
           vaccine: dto.vaccine,
           stock: dto.stock,
         };
-        await updateDoc(docRef, {
-          'clinic.availableVaccines': arrayUnion({
-            newVaccineStock,
+
+        // add availability on vaccine
+        const vaccineData = await getDocs(
+          query(collection(db, 'MsVaccine'), where('id', '==', dto.vaccine.id)),
+        );
+        const vaxSnap = vaccineData.docs[0];
+        const vaxRef = doc(db, 'MsVaccine', vaxSnap.id);
+        const vax: IVaccine = vaxSnap.data() as IVaccine;
+        const clinicInVax: IClinic = data.clinic;
+
+        await updateDoc(vaxRef, {
+          availableAt: arrayUnion({
+            ...clinicInVax,
           }),
         });
-        // await updateDoc(docRef, {
-        //   : arrayUnion({
-        //     ...dto,
-        //     id: newId,
-        //   }),
-        // });
+
+        await updateDoc(docRef, {
+          'clinic.availableVaccines': arrayUnion({
+            ...newVaccineStock,
+          }),
+        });
       } else {
         await updateDoc(docRef, {
-          'clinic.availableVaccines': update,
+          'clinic.availableVaccines': updateRes,
         });
       }
 
-      const res = await this.getClinicById(clinicId);
+      const res = await this.getClinicById(accountId);
 
       return res;
     } catch (ex) {
@@ -171,30 +207,39 @@ export class ClinicHelper {
     }
   }
 
-  async addClinic(request: IClinic) {
+  async addClinic(request: ICreateClinic) {
     try {
       var crypto = require('crypto');
       const newId = crypto.randomUUID();
       const newClinic: IClinic = {
         id: newId,
-        name: request.name,
-        address: request.address,
-        geoLatitude: request.geoLatitude,
-        geoLongtitude: request.geoLongtitude,
+        name: request.clinic.name,
+        address: request.clinic.address,
+        geoLatitude: request.clinic.geoLatitude,
+        geoLongtitude: request.clinic.geoLongtitude,
         availableVaccines: [],
         distanceFromUser: null,
-        websiteURL: request.websiteURL,
-        googleMapsURL: request.googleMapsURL,
+        websiteURL: request.clinic.websiteURL,
+        googleMapsURL: request.clinic.googleMapsURL,
         reviews: [],
-        openTime: request.openTime,
-        closeTime: request.closeTime,
+        openTime: request.clinic.openTime,
+        closeTime: request.clinic.closeTime,
         scheduledAppointments: [],
-        image: request.image,
+        image: request.clinic.image,
       };
 
+      const newClinicAccount: IClinicAccount = {
+        id: crypto.randomUUID(),
+        email: request.hashedUsername,
+        secretKey: request.hashedPassword,
+        type: userAccountTypes.clinic,
+        clinic: newClinic,
+      };
+
+      await addDoc(collection(db, 'MsAccount'), newClinicAccount);
       await addDoc(collection(db, 'MsClinic'), newClinic);
 
-      return newClinic;
+      return newClinicAccount;
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }

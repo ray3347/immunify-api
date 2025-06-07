@@ -4,8 +4,8 @@ export const userAccountTypes={
 }
 
 export const appointmentStatusTypes={
-    pending: "pending",
-    approved: "approved",
-    completed: "completed",
-    cancelled: "cancelled"
+    pending: "Pending",
+    scheduled: "Scheduled",
+    completed: "Completed",
+    cancelled: "Cancelled"
 }

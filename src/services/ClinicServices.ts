@@ -13,6 +13,7 @@ import { AuthGuard } from './AuthGuard';
 import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
 import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
+import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
 
 @Controller('clinic')
 export class ClinicServices {
@@ -34,7 +35,7 @@ export class ClinicServices {
 
   @UseGuards(AuthGuard)
   @Post('add')
-  async add(@Res() response, @Body('dto') dto: IClinic) {
+  async add(@Res() response, @Body('dto') dto: ICreateClinic) {
     try {
       const dtoData = await this.helper.addClinic(dto);
 
@@ -66,7 +67,7 @@ export class ClinicServices {
 
   @UseGuards(AuthGuard)
   @Post('login')
-  async login(@Res() response, @Query('userData') userData: IUserLoginData) {
+  async login(@Res() response, @Body('userData') userData: IUserLoginData) {
     try {
       const dtoData = await this.helper.clinicLogin(userData);
 
@@ -82,12 +83,12 @@ export class ClinicServices {
   @Post('vaccine-stock/modify')
   async modifyVaccineStock(
     @Res() response,
-    @Query('clinicId') clinicId: string,
-    @Query('vaccineStock') vaccineStock: IVaccineStock,
+    @Query('accountId') accountId: string,
+    @Body('vaccineStock') vaccineStock: IVaccineStock,
   ) {
     try {
       const dtoData = await this.helper.modifyClinicVaccineAvailability(
-        clinicId,
+        accountId,
         vaccineStock,
       );
 
@@ -103,7 +104,7 @@ export class ClinicServices {
   @Get('id')
   async getUserById(@Res() response, @Query('accountId') accountId: string) {
     try {
-      const userObj = await this.helper.getClinicById('accountId');
+      const userObj = await this.helper.getClinicById(accountId);
 
       return response.status(HttpStatus.OK).json({
         data: userObj,

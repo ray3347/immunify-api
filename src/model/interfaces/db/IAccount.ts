@@ -10,6 +10,7 @@ export interface IAccount{
 }
 
 export interface IUserAccount extends IAccount{
+    notificationToken: string[];
     userList: IUser[];
 }
 

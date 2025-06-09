@@ -14,12 +14,14 @@ import {
 } from 'firebase/firestore';
 import { WikiHelper } from './WikiHelper';
 import { IVaccineRecommendation } from '../model/interfaces/requests/IVaccineRecommendation';
-import { userAccountTypes } from '../constants/types';
+import { appointmentStatusTypes, userAccountTypes } from '../constants/types';
 import { db } from '../model/entities/firebase';
 import { IUserAccount } from '../model/interfaces/db/IAccount';
 import { IUser, IVaccinationHistory } from '../model/interfaces/db/IUser';
 import { IVaccine } from '../model/interfaces/db/IVaccine';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
+import { differenceInDays } from 'date-fns';
+import { pushNotification } from '../utilities/fcm-publisher';
 
 @Injectable()
 export class UserHelper {
@@ -45,6 +47,7 @@ export class UserHelper {
           secretKey: dto.hashedPassword,
           type: userAccountTypes.user,
           userList: [],
+          notificationToken: [dto.notificationToken],
         };
         await addDoc(collection(db, 'MsAccount'), newUser);
 
@@ -78,11 +81,21 @@ export class UserHelper {
           'Email or Password Incorrect, please try again.',
         );
       }
+
+      const docSnap = dbData.docs[0];
+      const docRef = doc(db, 'MsAccount', docSnap.id);
       // console.log(dbData)
-      dbData.forEach((x) => {
+      dbData.forEach(async (x) => {
         // const user = x.data();
-        userRes = x.data();
+        const user = x.data() as IUserAccount;
+        const token = dto.notificationToken;
+        userRes = user;
         userRes.secretKey = '';
+        if (!user.notificationToken.includes(dto.notificationToken)) {
+          await updateDoc(docRef, {
+            notificationToken: arrayUnion(token),
+          });
+        }
         // return user;
       });
       // console.log(userRes)
@@ -300,7 +313,7 @@ export class UserHelper {
       const user = data.userList.map((u) => {
         if (u.id == userId) {
           var crypto = require('crypto');
-          const newId= crypto.randomUUID();
+          const newId = crypto.randomUUID();
           const newRecord: IVaccinationHistory = {
             ...dto,
             id: newId,
@@ -398,5 +411,45 @@ export class UserHelper {
     });
 
     return sorted.slice(0, 3); // Return only top 3
+  }
+
+  async sendDailyNotificationReminder() {
+    try {
+      const today = new Date();
+      const dbData = await getDocs(
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.user),
+        ),
+      );
+
+      dbData.forEach((entry) => {
+        const dataValues = entry.data() as IUserAccount;
+        dataValues.userList.map(async (u) => {
+          u.scheduledAppointments
+            .filter((a) => a.status == appointmentStatusTypes.scheduled)
+            .map(async (app) => {
+              const appDate = new Date(app.scheduledDate);
+              const dayDiff = differenceInDays(appDate, today);
+              console.log('diff', dayDiff);
+              if (
+                today < appDate &&
+                (dayDiff == 7 || dayDiff == 3 || dayDiff == 1)
+              ) {
+                dataValues.notificationToken.forEach(async (token) => {
+                  console.log('send notif', `${u.fullName} - ${token}`)
+                  await pushNotification(
+                    'Appointment Reminder',
+                    `${u.fullName}'s ${app.vaccine.vaccineName} Vaccine Appointment is in ${dayDiff} days`,
+                    token,
+                  );
+                });
+              }
+            });
+        });
+      });
+    } catch (ex) {
+      throw ex;
+    }
   }
 }

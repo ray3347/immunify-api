@@ -3,6 +3,7 @@ import { AuthGuard } from "./AuthGuard";
 import { UserHelper } from "../helper/UserHelper";
 import { IUser, IVaccinationHistory } from "../model/interfaces/db/IUser";
 import { IUserLoginData } from "../model/interfaces/requests/IUserLoginData";
+import { pushNotification } from "../utilities/fcm-publisher";
 
 @Controller('user')
 export class UserServices{
@@ -145,6 +146,22 @@ export class UserServices{
 
             return response.status(HttpStatus.OK).json({
                 data: userObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('/notification/appointment/reminder')
+    async sendDailyNotificationReminder(@Res() response){
+        try{
+            await this.helper.sendDailyNotificationReminder();
+
+            return response.status(HttpStatus.OK).json({
+                data: 'Success'
             });
         }
         catch(ex){

@@ -12,14 +12,14 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { userAccountTypes } from 'src/constants/types';
-import { db } from 'src/model/entities/firebase';
-import { IAccount, IUserAccount } from 'src/model/interfaces/db/IAccount';
-import { IUser, IVaccinationHistory } from 'src/model/interfaces/db/IUser';
-import { IVaccine } from 'src/model/interfaces/db/IVaccine';
-import { IUserLoginData } from 'src/model/interfaces/requests/IUserLoginData';
 import { WikiHelper } from './WikiHelper';
 import { IVaccineRecommendation } from '../model/interfaces/requests/IVaccineRecommendation';
+import { userAccountTypes } from '../constants/types';
+import { db } from '../model/entities/firebase';
+import { IUserAccount } from '../model/interfaces/db/IAccount';
+import { IUser, IVaccinationHistory } from '../model/interfaces/db/IUser';
+import { IVaccine } from '../model/interfaces/db/IVaccine';
+import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
 
 @Injectable()
 export class UserHelper {

@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { AppointmentHelper } from "src/helper/AppointmentHelper";
-import { AppointmentServices } from "src/services/AppointmentServices";
 import { ClinicHelper } from "../../helper/ClinicHelper";
+import { AppointmentHelper } from "../../helper/AppointmentHelper";
+import { AppointmentServices } from "../../services/AppointmentServices";
 
 @Module({
     providers: [AppointmentHelper, ClinicHelper],

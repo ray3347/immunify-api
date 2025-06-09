@@ -1,8 +1,8 @@
 import { Body, Controller, Get, HttpStatus, Param, Post, Query, Res, UseGuards } from "@nestjs/common";
-import { UserHelper } from "src/helper/UserHelper";
-import { IUserLoginData } from "src/model/interfaces/requests/IUserLoginData";
 import { AuthGuard } from "./AuthGuard";
-import { IUser, IVaccinationHistory } from "src/model/interfaces/db/IUser";
+import { UserHelper } from "../helper/UserHelper";
+import { IUser, IVaccinationHistory } from "../model/interfaces/db/IUser";
+import { IUserLoginData } from "../model/interfaces/requests/IUserLoginData";
 
 @Controller('user')
 export class UserServices{

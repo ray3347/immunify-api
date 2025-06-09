@@ -1,9 +1,9 @@
 import { Body, Controller, Get, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
-import { WikiHelper } from 'src/helper/WikiHelper';
 import { AuthGuard } from './AuthGuard';
-import { IVaccine } from 'src/model/interfaces/db/IVaccine';
-import { IDisease } from 'src/model/interfaces/db/IDisease';
-import { IArticle } from 'src/model/interfaces/db/IArticle';
+import { WikiHelper } from '../helper/WikiHelper';
+import { IArticle } from '../model/interfaces/db/IArticle';
+import { IDisease } from '../model/interfaces/db/IDisease';
+import { IVaccine } from '../model/interfaces/db/IVaccine';
 
 @Controller('wiki')
 export class WikiServices {

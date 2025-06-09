@@ -10,18 +10,14 @@ import {
 } from 'firebase/firestore';
 import { request } from 'http';
 import { appointmentStatusTypes, userAccountTypes } from '../constants/types';
-import { db } from 'src/model/entities/firebase';
-import { IClinicAccount, IUserAccount } from 'src/model/interfaces/db/IAccount';
-import {
-  IAppointment,
-  IClinicAppointment,
-  IUserAppointment,
-} from 'src/model/interfaces/db/IAppointment';
-import { IClinic, IVaccineStock } from 'src/model/interfaces/db/IClinic';
-import { IUser, IVaccinationHistory } from 'src/model/interfaces/db/IUser';
-import { IBookAppointmentRequestDTO } from 'src/model/interfaces/requests/IBookAppointmentRequestDTO';
 import { ClinicHelper } from './ClinicHelper';
 import { UserHelper } from './UserHelper';
+import { db } from '../model/entities/firebase';
+import { IClinicAccount, IUserAccount } from '../model/interfaces/db/IAccount';
+import { IAppointment, IUserAppointment, IClinicAppointment } from '../model/interfaces/db/IAppointment';
+import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
+import { IVaccinationHistory } from '../model/interfaces/db/IUser';
+import { IBookAppointmentRequestDTO } from '../model/interfaces/requests/IBookAppointmentRequestDTO';
 
 @Injectable()
 export class AppointmentHelper {

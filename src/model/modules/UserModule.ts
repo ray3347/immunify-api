@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { UserHelper } from "src/helper/UserHelper";
-import { UserServices } from "src/services/UserServices";
+import { UserHelper } from "../../helper/UserHelper";
+import { UserServices } from "../../services/UserServices";
 
 @Module({
     providers: [UserHelper],

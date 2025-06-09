@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { WikiHelper } from "src/helper/WikiHelper";
-import { WikiServices } from "src/services/WikiServices";
+import { WikiHelper } from "../../helper/WikiHelper";
+import { WikiServices } from "../../services/WikiServices";
 
 @Module({
     providers: [WikiHelper],

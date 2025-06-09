@@ -8,12 +8,11 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ClinicHelper } from 'src/helper/ClinicHelper';
 import { AuthGuard } from './AuthGuard';
-import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
 import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
 import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
+import { ClinicHelper } from '../helper/ClinicHelper';
 
 @Controller('clinic')
 export class ClinicServices {

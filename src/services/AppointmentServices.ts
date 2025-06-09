@@ -9,9 +9,9 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AppointmentHelper } from 'src/helper/AppointmentHelper';
 import { AuthGuard } from './AuthGuard';
-import { IBookAppointmentRequestDTO } from 'src/model/interfaces/requests/IBookAppointmentRequestDTO';
+import { AppointmentHelper } from '../helper/AppointmentHelper';
+import { IBookAppointmentRequestDTO } from '../model/interfaces/requests/IBookAppointmentRequestDTO';
 
 @Controller('appointment')
 export class AppointmentServices {

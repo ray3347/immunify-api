@@ -10,16 +10,16 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { db } from 'src/model/entities/firebase';
-import { IClinic, IVaccineStock } from 'src/model/interfaces/db/IClinic';
-import { IVaccine } from 'src/model/interfaces/db/IVaccine';
-import { IClinicFilterRequestDTO } from 'src/model/interfaces/requests/IClinicFilterRequestDTO';
-import { ILocationData } from 'src/model/interfaces/requests/ILocationData';
-import { distanceCalculator } from 'src/utilities/distanceCalculator';
 import { userAccountTypes } from '../constants/types';
 import { IUserLoginData } from '../model/interfaces/requests/IUserLoginData';
 import { IClinicAccount } from '../model/interfaces/db/IAccount';
 import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
+import { db } from '../model/entities/firebase';
+import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
+import { IVaccine } from '../model/interfaces/db/IVaccine';
+import { IClinicFilterRequestDTO } from '../model/interfaces/requests/IClinicFilterRequestDTO';
+import { ILocationData } from '../model/interfaces/requests/ILocationData';
+import { distanceCalculator } from '../utilities/distanceCalculator';
 
 @Injectable()
 export class ClinicHelper {

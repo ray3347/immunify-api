@@ -1,14 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { userAccountTypes } from 'src/constants/types';
-import { db } from 'src/model/entities/firebase';
-import { IUserAccount } from 'src/model/interfaces/db/IAccount';
-import { IArticle } from 'src/model/interfaces/db/IArticle';
-import { IDisease } from 'src/model/interfaces/db/IDisease';
-import { IVaccine } from 'src/model/interfaces/db/IVaccine';
 import { distanceCalculator } from '../utilities/distanceCalculator';
 import { ILocationData } from '../model/interfaces/requests/ILocationData';
 import { IClinic } from '../model/interfaces/db/IClinic';
+import { db } from '../model/entities/firebase';
+import { IArticle } from '../model/interfaces/db/IArticle';
+import { IDisease } from '../model/interfaces/db/IDisease';
+import { IVaccine } from '../model/interfaces/db/IVaccine';
 
 @Injectable()
 export class WikiHelper {

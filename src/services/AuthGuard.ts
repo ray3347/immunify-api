@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, UnauthorizedException } from "@nestjs/common";
-import { AuthHelper } from "src/helper/AuthHelper";
+import { AuthHelper } from "../helper/AuthHelper";
 
 export class AuthGuard implements CanActivate {
     constructor(private readonly helper: AuthHelper) {}

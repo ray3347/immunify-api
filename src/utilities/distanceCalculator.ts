@@ -1,4 +1,4 @@
-import { ILocationData } from "src/model/interfaces/requests/ILocationData";
+import { ILocationData } from "../model/interfaces/requests/ILocationData";
 
 export const distanceCalculator = (userGeoLocation: ILocationData, targetGeoLocation: ILocationData): number => {
     const R = 6371; // Earth radius in kilometers

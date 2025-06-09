@@ -18,6 +18,8 @@ import { IAccount, IUserAccount } from 'src/model/interfaces/db/IAccount';
 import { IUser, IVaccinationHistory } from 'src/model/interfaces/db/IUser';
 import { IVaccine } from 'src/model/interfaces/db/IVaccine';
 import { IUserLoginData } from 'src/model/interfaces/requests/IUserLoginData';
+import { WikiHelper } from './WikiHelper';
+import { IVaccineRecommendation } from '../model/interfaces/requests/IVaccineRecommendation';
 
 @Injectable()
 export class UserHelper {
@@ -113,13 +115,18 @@ export class UserHelper {
         }),
       });
 
-      return userRes;
+      const returnObj = await this.getUserById(accountId);
+
+      return returnObj;
+
+      // return userRes;
     } catch (ex) {
       throw ex;
     }
   }
 
   async editUser(accountId: string, dto: IUser) {
+    console.log('babi', dto);
     try {
       var userRes: any = null;
       const dbData = await getDocs(
@@ -146,7 +153,11 @@ export class UserHelper {
         userList: mapUser,
       });
 
-      return userRes;
+      const returnObj = await this.getUserById(accountId);
+
+      return returnObj;
+
+      // return userRes;
     } catch (ex) {
       throw ex;
     }
@@ -177,13 +188,15 @@ export class UserHelper {
         throw new UnauthorizedException('Invalid User');
       }
 
-      return userRes;
+      const returnObj = await this.getUserById(accountId);
+
+      return returnObj;
     } catch (ex) {
       throw ex;
     }
   }
 
-  async getUpcomingVaccineSchedule(accountId: string) {
+  async getNextVaccineDoseAppointment(accountId: string) {
     try {
       // console.log("babi", accountId)
       const dbData = await getDocs(
@@ -266,7 +279,53 @@ export class UserHelper {
     }
   }
 
-  async getAppointmentDetails(appointmentId: string) {}
+  async addVaccinationHistory(
+    accountId: string,
+    userId: string,
+    dto: IVaccinationHistory,
+  ) {
+    try {
+      const dbData = await getDocs(
+        query(collection(db, 'MsAccount'), where('id', '==', accountId)),
+      );
+
+      if (dbData == null) {
+        throw new UnauthorizedException('Invalid Account');
+      }
+
+      const docSnap = dbData.docs[0];
+      const docRef = doc(db, 'MsAccount', docSnap.id);
+      const data: IUserAccount = docSnap.data() as IUserAccount;
+
+      const user = data.userList.map((u) => {
+        if (u.id == userId) {
+          var crypto = require('crypto');
+          const newId= crypto.randomUUID();
+          const newRecord: IVaccinationHistory = {
+            ...dto,
+            id: newId,
+            vaccine: {
+              ...dto.vaccine,
+              availableAt: [],
+            },
+          };
+          u.vaccinationHistory.push(newRecord);
+        }
+
+        return u;
+      });
+
+      await updateDoc(docRef, {
+        userList: user,
+      });
+
+      const returnObj = await this.getUserById(accountId);
+
+      return returnObj;
+    } catch (ex) {
+      throw ex;
+    }
+  }
 
   async getUserById(accountId: string) {
     try {
@@ -289,5 +348,55 @@ export class UserHelper {
     } catch (ex) {
       throw ex;
     }
+  }
+
+  async getRecommendedVaccines(accountId: string, userId: string) {
+    const vaccineHelper = new WikiHelper();
+    const allVaccines: IVaccine[] = await vaccineHelper.getVaccineList();
+    const userAccount = await this.getUserById(accountId);
+    const user = userAccount.userList.filter((u) => u.id == userId)[0];
+    const currentDate = new Date();
+    const ageInYears =
+      (currentDate.getTime() - new Date(user.dateOfBirth).getTime()) /
+      (1000 * 60 * 60 * 24 * 365.25);
+
+    const recommendations: IVaccineRecommendation[] = [];
+
+    for (const vaccine of allVaccines) {
+      // Check age eligibility
+      if (ageInYears < vaccine.minimumAge) continue;
+
+      // Check vaccination history
+      const history = user.vaccinationHistory
+        .filter((vh) => vh.vaccine.id === vaccine.id)
+        .sort((a, b) => b.doseNumber - a.doseNumber);
+
+      const lastDose = history[0]?.doseNumber ?? 0;
+
+      if (lastDose >= vaccine.doses) continue; // All doses complete
+
+      const nextDose = lastDose + 1;
+      const trimVax: IVaccine = {
+        ...vaccine,
+        availableAt: [],
+      };
+
+      recommendations.push({
+        vaccine: trimVax,
+        nextDose,
+        message:
+          lastDose === 0
+            ? `Start ${trimVax.vaccineName} (Dose 1 of ${trimVax.doses})`
+            : `Continue ${trimVax.vaccineName} (Next: Dose ${nextDose} of ${trimVax.doses})`,
+      });
+    }
+
+    // Sort by nextDose (lower dose number = higher priority), then by total required doses
+    const sorted = recommendations.sort((a, b) => {
+      if (a.nextDose !== b.nextDose) return b.nextDose - a.nextDose;
+      return b.vaccine.doses - a.vaccine.doses;
+    });
+
+    return sorted.slice(0, 3); // Return only top 3
   }
 }

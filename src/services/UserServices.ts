@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpStatus, Param, Post, Query, Res, UseGuards }
 import { UserHelper } from "src/helper/UserHelper";
 import { IUserLoginData } from "src/model/interfaces/requests/IUserLoginData";
 import { AuthGuard } from "./AuthGuard";
-import { IUser } from "src/model/interfaces/db/IUser";
+import { IUser, IVaccinationHistory } from "src/model/interfaces/db/IUser";
 
 @Controller('user')
 export class UserServices{
@@ -13,10 +13,10 @@ export class UserServices{
     async register(@Res() response, @Body('userData') userData: IUserLoginData){
         try{
             // console.log("babi", userData)
-            await this.helper.register(userData);
+            const obj = await this.helper.register(userData);
 
             return response.status(HttpStatus.OK).json({
-                data: "Success"
+                data: obj
             });
         }
         catch(ex){
@@ -90,10 +90,10 @@ export class UserServices{
     }
 
     @UseGuards(AuthGuard)
-    @Get('get/schedule/upcoming')
-    async getUpcomingVaccineSchedule(@Res() response, @Query('accountId') accountId: string){
+    @Get('get/appointment/next-dose')
+    async getNextVaccineDoseAppointment(@Res() response, @Query('accountId') accountId: string){
         try{
-            const upcomingScheduleObj = await this.helper.getUpcomingVaccineSchedule(accountId);
+            const upcomingScheduleObj = await this.helper.getNextVaccineDoseAppointment(accountId);
 
             return response.status(HttpStatus.OK).json({
                 data: upcomingScheduleObj
@@ -110,6 +110,38 @@ export class UserServices{
     async getUserById(@Res() response, @Query('accountId') accountId: string){
         try{
             const userObj = await this.helper.getUserById(accountId);
+
+            return response.status(HttpStatus.OK).json({
+                data: userObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Post('history/add')
+    async addVaccinationHistory(@Res() response, @Query('accountId') accountId: string, @Query('userId') userId: string, @Body('dto') dto: IVaccinationHistory){
+        try{
+            const userObj = await this.helper.addVaccinationHistory(accountId,userId, dto);
+
+            return response.status(HttpStatus.OK).json({
+                data: userObj
+            });
+        }
+        catch(ex){
+            console.log(ex)
+            return response.status(ex.status).json(ex.response);
+        }
+    }
+
+    @UseGuards(AuthGuard)
+    @Get('/vaccine/recommendation')
+    async getRecommendedVaccines(@Res() response, @Query('accountId') accountId: string, @Query('userId') userId: string){
+        try{
+            const userObj = await this.helper.getRecommendedVaccines(accountId,userId);
 
             return response.status(HttpStatus.OK).json({
                 data: userObj

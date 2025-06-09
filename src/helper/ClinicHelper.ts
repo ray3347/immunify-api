@@ -23,7 +23,7 @@ import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
 
 @Injectable()
 export class ClinicHelper {
-  async getClinic(request: IClinicFilterRequestDTO) {
+  async getClinicWithLocation(request: IClinicFilterRequestDTO) {
     try {
       const clinicList: IClinic[] = [];
       var userLocationData: ILocationData | null = null;
@@ -35,13 +35,15 @@ export class ClinicHelper {
       }
       const dbData = await getDocs(
         query(
-          collection(db, 'MsClinic'),
-          where('name', '==', request.filterName ?? ''),
-          where(
-            'availableVaccines',
-            'array-contains',
-            request.filterVaccineId ?? '',
-          ),
+          collection(db, 'MsAccount'),
+          where('clinic.id', '==', request.clinicId),
+          // collection(db, 'MsClinic'),
+          // where('name', '==', request.filterName ?? ''),
+          // where(
+          //   'availableVaccines',
+          //   'array-contains',
+          //   request.filterVaccineId ?? '',
+          // ),
         ),
       );
 
@@ -60,22 +62,22 @@ export class ClinicHelper {
         clinicList.push(clinicData);
       });
 
-      if (userLocationData != null) {
-        return clinicList
-          .sort(
-            (a, b) =>
-              distanceCalculator(userLocationData as ILocationData, {
-                latitude: parseInt(a.geoLatitude),
-                longtitude: parseInt(a.geoLongtitude),
-              }) -
-              distanceCalculator(userLocationData as ILocationData, {
-                latitude: parseInt(b.geoLatitude),
-                longtitude: parseInt(b.geoLongtitude),
-              }),
-          )
-          .slice(0, 5);
-      }
-      return clinicList;
+      // if (userLocationData != null) {
+      //   return clinicList
+      //     .sort(
+      //       (a, b) =>
+      //         distanceCalculator(userLocationData as ILocationData, {
+      //           latitude: parseInt(a.geoLatitude),
+      //           longtitude: parseInt(a.geoLongtitude),
+      //         }) -
+      //         distanceCalculator(userLocationData as ILocationData, {
+      //           latitude: parseInt(b.geoLatitude),
+      //           longtitude: parseInt(b.geoLongtitude),
+      //         }),
+      //     )
+      //     .slice(0, 5);
+      // }
+      return clinicList[0];
     } catch (ex) {
       throw new UnauthorizedException(ex);
     }

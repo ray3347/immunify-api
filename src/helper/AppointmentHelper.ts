@@ -17,9 +17,11 @@ import {
   IClinicAppointment,
   IUserAppointment,
 } from 'src/model/interfaces/db/IAppointment';
-import { IClinic } from 'src/model/interfaces/db/IClinic';
+import { IClinic, IVaccineStock } from 'src/model/interfaces/db/IClinic';
 import { IUser, IVaccinationHistory } from 'src/model/interfaces/db/IUser';
 import { IBookAppointmentRequestDTO } from 'src/model/interfaces/requests/IBookAppointmentRequestDTO';
+import { ClinicHelper } from './ClinicHelper';
+import { UserHelper } from './UserHelper';
 
 @Injectable()
 export class AppointmentHelper {
@@ -27,15 +29,20 @@ export class AppointmentHelper {
   async getClinicAvailableTime(
     clinicId: string,
     selectedDate: Date,
-    sessionDurationMinutes: number = 15,
+    sessionDurationMinutes: number = 45,
   ) {
     try {
       const dbData = await getDocs(
-        query(collection(db, 'MsClinic'), where('id', '==', clinicId)),
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.clinic),
+          where('clinic.id', '==', clinicId),
+        ),
       );
       const availableSessions: string[] = [];
       dbData.forEach((x) => {
-        const clinic: IClinic = x.data() as IClinic;
+        const acc: IClinicAccount = x.data() as IClinicAccount;
+        const clinic: IClinic = acc.clinic;
 
         const formatToDateTime = (timeStr: string): Date => {
           const [hours, minutes] = timeStr.split(':').map(Number);
@@ -48,14 +55,14 @@ export class AppointmentHelper {
 
         const openTime = formatToDateTime(clinic.openTime);
         const closeTime = formatToDateTime(clinic.closeTime);
-
         // Get all appointments for the selected date
         const appointments = clinic.scheduledAppointments.filter((appt) => {
           const apptDate = new Date(appt.scheduledDate);
+          const reqDate = new Date(selectedDate);
           return (
-            apptDate.getFullYear() === selectedDate.getFullYear() &&
-            apptDate.getMonth() === selectedDate.getMonth() &&
-            apptDate.getDate() === selectedDate.getDate() &&
+            apptDate.getFullYear() === reqDate.getFullYear() &&
+            apptDate.getMonth() === reqDate.getMonth() &&
+            apptDate.getDate() === reqDate.getDate() &&
             appt.status !== appointmentStatusTypes.cancelled
             // !appt.isCanceled
           );
@@ -89,6 +96,7 @@ export class AppointmentHelper {
 
       return availableSessions;
     } catch (ex) {
+      console.log('aaaaa', ex);
       throw ex;
     }
   }
@@ -100,7 +108,11 @@ export class AppointmentHelper {
       );
 
       const clinic = await getDocs(
-        query(collection(db, 'MsClinic'), where('id', '==', dto.clinicId)),
+        query(
+          collection(db, 'MsAccount'),
+          where('type', '==', userAccountTypes.clinic),
+          where('clinic.id', '==', dto.clinicId),
+        ),
       );
 
       if (dbData == null) {
@@ -113,27 +125,51 @@ export class AppointmentHelper {
       const docSnap = dbData.docs[0];
       const docRef = doc(db, 'MsAccount', docSnap.id);
 
-      const clinicRef = doc(db, 'MsClinic', clinic.docs[0].id);
+      const clinicRef = doc(db, 'MsAccount', clinic.docs[0].id);
 
       var crypto = require('crypto');
       const newId = crypto.randomUUID();
+
+      const formatToDateTime = (timeStr: string): Date => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        const date = new Date(dto.selectedDate);
+        date.setHours(hours, minutes, 0, 0);
+        return date;
+      };
+
+      const currentTime = formatToDateTime(dto.selectedStartTime);
+
+      const endTime = new Date(currentTime.getTime() + 45 * 60000);
+      const toTimeString = (date: Date) => date.toTimeString().slice(0, 5);
 
       const newAppointment: IAppointment = {
         id: newId,
         status: appointmentStatusTypes.pending,
         scheduledDate: dto.selectedDate,
         scheduledTime: dto.selectedStartTime,
-        scheduledEndTime: '',
+        scheduledEndTime: toTimeString(endTime),
         vaccine: dto.vaccine,
       };
 
-      var clinicAppointment: IClinicAppointment | null = null;
+      // var clinicAppointment: IClinicAppointment = {
+      //   userAccountId: '',
+      //   id: '',
+      //   scheduledTime: '',
+      //   scheduledEndTime: '',
+      //   status: '',
+      // };
       const data: IUserAccount = docSnap.data() as IUserAccount;
-      const mapUser = data.userList.map((user, idx) => {
-        if (dto.userId.includes(user.id)) {
+
+      const mapUser = await data.userList.map(async (user, idx) => {
+        if (dto.userId == user.id) {
+          const clinicData = clinic.docs[0].data() as IClinicAccount;
           const newUserAppointment: IUserAppointment = {
             ...newAppointment,
-            clinic: clinic.docs[0].data() as IClinic,
+            clinic: {
+              ...clinicData.clinic,
+              scheduledAppointments: [],
+              availableVaccines: [],
+            },
           };
 
           const newClinicAppointment: IClinicAppointment = {
@@ -143,21 +179,36 @@ export class AppointmentHelper {
           };
 
           user.scheduledAppointments.push(newUserAppointment);
-          clinicAppointment = newClinicAppointment;
+
+          await updateDoc(clinicRef, {
+            'clinic.scheduledAppointments': arrayUnion({
+              ...newClinicAppointment,
+            }),
+          });
+          // clinicAppointment = newClinicAppointment;
         }
 
         return user;
       });
+      await updateDoc(docRef, {
+        userList: mapUser,
+      });
 
-      if (clinicAppointment != null) {
-        await updateDoc(docRef, {
-          userList: mapUser,
-        });
+      // const returnObj = await getDocs(
+      //   query(collection(db, 'MsAccount'), where('id', '==', accountId)),
+      // );
 
-        await updateDoc(clinicRef, {
-          scheduledAppointments: arrayUnion(clinicAppointment),
-        });
-      }
+      // const resSnap = returnObj.docs[0];
+      // const resRef = doc(db, 'MsAccount', resSnap.id);
+      // const resData: IUserAccount = resSnap.data() as IUserAccount;
+
+      const helper = new UserHelper();
+      const resData = helper.getUserById(accountId);
+
+      return {
+        appointmentId: newId,
+        dto: resData,
+      };
     } catch (ex) {
       throw ex;
     }
@@ -179,53 +230,64 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(
-        async (app) => {
-          if (app.id == appointmentId) {
-            app.status = appointmentStatusTypes.scheduled;
-            count++;
+      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+        if (app.id == appointmentId) {
+          const helper = new ClinicHelper();
+          const checkVax = data.clinic.availableVaccines.find(
+            (v) => v.vaccine.id == app.vaccine.id,
+          );
+          if (checkVax) {
+            const req: IVaccineStock = {
+              ...checkVax,
+              stock: checkVax.stock - 1,
+            };
+            await helper.modifyClinicVaccineAvailability(data.id, req);
+          }
+          app.status = appointmentStatusTypes.scheduled;
+          count++;
 
-            // update user
-            const userData = await getDocs(
-              query(
-                collection(db, 'MsAccount'),
-                where('type', '==', userAccountTypes.user),
-                where('id', '==', app.userAccountId),
-              ),
-            );
+          // update user
+          const userData = await getDocs(
+            query(
+              collection(db, 'MsAccount'),
+              where('type', '==', userAccountTypes.user),
+              where('id', '==', app.userAccountId),
+            ),
+          );
 
-            const userSnap = userData.docs[0];
-            const userRef = doc(db, 'MsAccount', userSnap.id);
-            const u: IUserAccount = userSnap.data() as IUserAccount;
-            var uCount = 0;
-            const update = u.userList.map((um) => {
-              if (um.id == app.user.id) {
-                const updateAppointment = um.scheduledAppointments.map((ua, id) => {
+          const userSnap = userData.docs[0];
+          const userRef = doc(db, 'MsAccount', userSnap.id);
+          const u: IUserAccount = userSnap.data() as IUserAccount;
+          var uCount = 0;
+          const update = u.userList.map((um) => {
+            if (um.id == app.user.id) {
+              const updateAppointment = um.scheduledAppointments.map(
+                (ua, id) => {
                   if (ua.id == appointmentId) {
                     ua.status = appointmentStatusTypes.scheduled;
                     uCount++;
                   }
                   return ua;
-                });
-                um.scheduledAppointments = updateAppointment;
-              }
-
-              return um;
-            });
-
-            if (uCount == 0) {
-              throw new UnauthorizedException('User Not Found');
-            } else {
-              await updateDoc(userRef, {
-                userList: update,
-              });
+                },
+              );
+              um.scheduledAppointments = updateAppointment;
             }
-            // send email and push notif here
-          }
 
-          return app;
-        },
-      );
+            return um;
+          });
+
+          if (uCount == 0) {
+            throw new UnauthorizedException('User Not Found');
+          } else {
+            await updateDoc(userRef, {
+              userList: update,
+            });
+          }
+          // send email and push notif here
+        }
+
+        return app;
+      });
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');
@@ -254,64 +316,65 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(
-        async (app) => {
-          if (app.id == appointmentId) {
-            app.status = appointmentStatusTypes.completed;
-            count++;
+      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+        if (app.id == appointmentId) {
+          app.status = appointmentStatusTypes.completed;
+          count++;
 
-            // update user
-            const userData = await getDocs(
-              query(
-                collection(db, 'MsAccount'),
-                where('type', '==', userAccountTypes.user),
-                where('id', '==', app.userAccountId),
-              ),
-            );
+          // update user
+          const userData = await getDocs(
+            query(
+              collection(db, 'MsAccount'),
+              where('type', '==', userAccountTypes.user),
+              where('id', '==', app.userAccountId),
+            ),
+          );
 
-            const userSnap = userData.docs[0];
-            const userRef = doc(db, 'MsAccount', userSnap.id);
-            const u: IUserAccount = userSnap.data() as IUserAccount;
-            var uCount = 0;
-            const update = u.userList.map(async (um) => {
-              if (um.id == app.user.id) {
-                const updateAppointment = um.scheduledAppointments.map((ua, id) => {
+          const userSnap = userData.docs[0];
+          const userRef = doc(db, 'MsAccount', userSnap.id);
+          const u: IUserAccount = userSnap.data() as IUserAccount;
+          var uCount = 0;
+          const update = u.userList.map(async (um) => {
+            if (um.id == app.user.id) {
+              const updateAppointment = um.scheduledAppointments.map(
+                (ua, id) => {
                   if (ua.id == appointmentId) {
                     ua.status = appointmentStatusTypes.completed;
                     uCount++;
                   }
                   return ua;
-                });
+                },
+              );
 
-                // generate vaccine certificate
-                const certificateUri = await this.generateVaccineCertificate(appointmentId);
-                const newHistory: IVaccinationHistory = {
-                  id: crypto.randomUUID(),
-                  vaccine: app.vaccine,
-                  vaccinationDate: new Date(),
-                  doseNumber: 1,
-                  certificateUri: certificateUri
-                }
-                um.scheduledAppointments = updateAppointment;
-                um.vaccinationHistory.push(newHistory);
-              }
-
-              return um;
-            });
-
-            if (uCount == 0) {
-              throw new UnauthorizedException('User Not Found');
-            } else {
-              await updateDoc(userRef, {
-                userList: update,
-              });
+              // generate vaccine certificate
+              const certificateUri =
+                await this.generateVaccineCertificate(appointmentId);
+              const newHistory: IVaccinationHistory = {
+                id: crypto.randomUUID(),
+                vaccine: app.vaccine,
+                vaccinationDate: new Date(),
+                doseNumber: 1,
+                certificateUri: certificateUri,
+              };
+              um.scheduledAppointments = updateAppointment;
+              um.vaccinationHistory.push(newHistory);
             }
-            // send email and push notif here
-          }
 
-          return app;
-        },
-      );
+            return um;
+          });
+
+          if (uCount == 0) {
+            throw new UnauthorizedException('User Not Found');
+          } else {
+            await updateDoc(userRef, {
+              userList: update,
+            });
+          }
+          // send email and push notif here
+        }
+
+        return app;
+      });
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');
@@ -340,53 +403,53 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(
-        async (app) => {
-          if (app.id == appointmentId) {
-            app.status = appointmentStatusTypes.cancelled;
-            count++;
+      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+        if (app.id == appointmentId) {
+          app.status = appointmentStatusTypes.cancelled;
+          count++;
 
-            // update user
-            const userData = await getDocs(
-              query(
-                collection(db, 'MsAccount'),
-                where('type', '==', userAccountTypes.user),
-                where('id', '==', app.userAccountId),
-              ),
-            );
+          // update user
+          const userData = await getDocs(
+            query(
+              collection(db, 'MsAccount'),
+              where('type', '==', userAccountTypes.user),
+              where('id', '==', app.userAccountId),
+            ),
+          );
 
-            const userSnap = userData.docs[0];
-            const userRef = doc(db, 'MsAccount', userSnap.id);
-            const u: IUserAccount = userSnap.data() as IUserAccount;
-            var uCount = 0;
-            const update = u.userList.map((um) => {
-              if (um.id == app.user.id) {
-                const updateAppointment = um.scheduledAppointments.map((ua, id) => {
+          const userSnap = userData.docs[0];
+          const userRef = doc(db, 'MsAccount', userSnap.id);
+          const u: IUserAccount = userSnap.data() as IUserAccount;
+          var uCount = 0;
+          const update = u.userList.map((um) => {
+            if (um.id == app.user.id) {
+              const updateAppointment = um.scheduledAppointments.map(
+                (ua, id) => {
                   if (ua.id == appointmentId) {
                     ua.status = appointmentStatusTypes.cancelled;
                     uCount++;
                   }
                   return ua;
-                });
-                um.scheduledAppointments = updateAppointment;
-              }
-
-              return um;
-            });
-
-            if (uCount == 0) {
-              throw new UnauthorizedException('User Not Found');
-            } else {
-              await updateDoc(userRef, {
-                userList: update,
-              });
+                },
+              );
+              um.scheduledAppointments = updateAppointment;
             }
-            // send email and push notif here
-          }
 
-          return app;
-        },
-      );
+            return um;
+          });
+
+          if (uCount == 0) {
+            throw new UnauthorizedException('User Not Found');
+          } else {
+            await updateDoc(userRef, {
+              userList: update,
+            });
+          }
+          // send email and push notif here
+        }
+
+        return app;
+      });
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');
@@ -400,7 +463,7 @@ export class AppointmentHelper {
     }
   }
 
-  async generateVaccineCertificate(appointmentId: string){
-    return "";
+  async generateVaccineCertificate(appointmentId: string) {
+    return '';
   }
 }

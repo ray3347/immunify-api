@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { WikiHelper } from 'src/helper/WikiHelper';
 import { AuthGuard } from './AuthGuard';
 import { IVaccine } from 'src/model/interfaces/db/IVaccine';
@@ -11,9 +11,9 @@ export class WikiServices {
 
   @UseGuards(AuthGuard)
   @Get('vaccine')
-  async getVaccine(@Res() response) {
+  async getVaccine(@Res() response, @Query('latitude') latitude?: string, @Query('longtitude') longtitude?: string) {
     try {
-      const dtoData = await this.helper.getVaccineList();
+      const dtoData = await this.helper.getVaccineList(latitude, longtitude);
 
       return response.status(HttpStatus.OK).json({
         data: dtoData,

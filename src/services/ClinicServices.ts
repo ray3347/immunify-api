@@ -19,19 +19,19 @@ import { ICreateClinic } from '../model/interfaces/requests/ICreateClinic';
 export class ClinicServices {
   constructor(private readonly helper: ClinicHelper) {}
 
-  @UseGuards(AuthGuard)
-  @Get('get')
-  async get(@Res() response, @Body('dto') dto: IClinicFilterRequestDTO) {
-    try {
-      const dtoData = await this.helper.getClinic(dto);
+  // @UseGuards(AuthGuard)
+  // @Post('details/location')
+  // async get(@Res() response, @Body('dto') dto: IClinicFilterRequestDTO) {
+  //   try {
+  //     const dtoData = await this.helper.getClinicWithLocation(dto);
 
-      return response.status(HttpStatus.OK).json({
-        data: dtoData,
-      });
-    } catch (ex) {
-      return response.status(ex.status).json(ex.response);
-    }
-  }
+  //     return response.status(HttpStatus.OK).json({
+  //       data: dtoData,
+  //     });
+  //   } catch (ex) {
+  //     return response.status(ex.status).json(ex.response);
+  //   }
+  // }
 
   @UseGuards(AuthGuard)
   @Post('add')

@@ -6,18 +6,50 @@ import { IUserAccount } from 'src/model/interfaces/db/IAccount';
 import { IArticle } from 'src/model/interfaces/db/IArticle';
 import { IDisease } from 'src/model/interfaces/db/IDisease';
 import { IVaccine } from 'src/model/interfaces/db/IVaccine';
+import { distanceCalculator } from '../utilities/distanceCalculator';
+import { ILocationData } from '../model/interfaces/requests/ILocationData';
+import { IClinic } from '../model/interfaces/db/IClinic';
 
 @Injectable()
 export class WikiHelper {
   // get
-  async getVaccineList() {
+  async getVaccineList(latitude?: string, longtitude?: string) {
     try {
-      // console.log("ANJING")
       var vaccineList: IVaccine[] = [];
       const dbData = await getDocs(collection(db, 'MsVaccine'));
       dbData.forEach((x) => {
         vaccineList.push(x.data() as IVaccine);
       });
+
+      if (latitude && longtitude) {
+        const resVax = vaccineList.map((v) => {
+          const vax: IVaccine = {
+            ...v,
+            availableAt: v.availableAt.map((clinic) => {
+              const userLocation: ILocationData = {
+                latitude: parseFloat(latitude),
+                longtitude: parseFloat(longtitude),
+              };
+
+              const clinicLocation: ILocationData = {
+                latitude: parseFloat(clinic.geoLatitude),
+                longtitude: parseFloat(clinic.geoLongtitude),
+              };
+              const c: IClinic = {
+                ...clinic,
+                distanceFromUser: distanceCalculator(
+                  userLocation,
+                  clinicLocation,
+                ).toFixed(2),
+              };
+              return c;
+            }),
+          };
+          return vax;
+        });
+
+        return resVax;
+      }
 
       return vaccineList;
     } catch (ex) {
@@ -49,12 +81,14 @@ export class WikiHelper {
           id: newId,
           doses: vax.doses,
           doseInterval: vax.doseInterval,
-          relatedDiseases: vax.relatedDiseases,
           vaccineInformation: vax.vaccineInformation,
           vaccineName: vax.vaccineName,
           informationSummary: vax.informationSummary,
           availableAt: vax.availableAt,
-          minimumAge: vax.minimumAge
+          minimumAge: vax.minimumAge,
+          price: vax.price,
+          sideEffects: vax.sideEffects,
+          image: vax.image,
         };
 
         queryList.push(newVax);
@@ -127,7 +161,7 @@ export class WikiHelper {
           coverImage: a.coverImage,
           publishDate: new Date(),
           readDuration: a.readDuration,
-          title: a.title
+          title: a.title,
         };
 
         queryList.push(newArticle);

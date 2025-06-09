@@ -7,8 +7,10 @@ export interface IVaccine{
     vaccineInformation: string;
     doses: number;
     doseInterval: number;
-    relatedDiseases: IDisease[];
     informationSummary: string[];
     minimumAge: number;
     availableAt: IClinic[];
+    sideEffects: string[];
+    price: string;
+    image: string;
 }

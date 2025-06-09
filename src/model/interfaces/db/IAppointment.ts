@@ -10,9 +10,10 @@ export interface IAppointment{
     scheduledDate: Date;
     scheduledTime: string;
     scheduledEndTime: string;
-    isComplete: boolean;
-    isCanceled: boolean;
-    isAllocated: boolean;
+    status: string;
+    // isComplete: boolean;
+    // isCanceled: boolean;
+    // isAllocated: boolean;
     vaccine: IVaccine;
 }
 
@@ -21,5 +22,6 @@ export interface IUserAppointment extends IAppointment{
 }
 
 export interface IClinicAppointment extends IAppointment{
+    userAccountId: string;
     user: IUser;
 }

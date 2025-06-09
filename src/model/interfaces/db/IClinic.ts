@@ -16,6 +16,7 @@ export interface IClinic{
     openTime: string;
     closeTime: string;
     scheduledAppointments: IClinicAppointment[];
+    image: string;
 }
 
 export interface IVaccineStock{

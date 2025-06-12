@@ -337,7 +337,7 @@ export class AppointmentHelper {
           const userRef = doc(db, 'MsAccount', userSnap.id);
           const u: IUserAccount = userSnap.data() as IUserAccount;
           var uCount = 0;
-          const update = u.userList.map(async (um) => {
+          const update = await Promise.all(u.userList.map(async (um) => {
             if (um.id == app.user.id) {
               const updateAppointment = um.scheduledAppointments.map(
                 (ua, id) => {
@@ -364,11 +364,12 @@ export class AppointmentHelper {
             }
 
             return um;
-          });
+          }));
 
           if (uCount == 0) {
             throw new UnauthorizedException('User Not Found');
           } else {
+            console.log('asdasd', update)
             await updateDoc(userRef, {
               userList: update,
             });

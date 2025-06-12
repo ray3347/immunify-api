@@ -369,7 +369,6 @@ export class AppointmentHelper {
           if (uCount == 0) {
             throw new UnauthorizedException('User Not Found');
           } else {
-            console.log('asdasd', update)
             await updateDoc(userRef, {
               userList: update,
             });

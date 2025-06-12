@@ -2,7 +2,7 @@ const axios = require('axios')
 
 export const pushNotification = async (title: string, body: string, token: string) => {
  const message = {
-    to: `ExponentPushToken[${token}]`,
+    to: `${token}`,
     sound: 'default',
     title: title,
     body: body,

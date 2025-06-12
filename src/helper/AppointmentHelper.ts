@@ -163,7 +163,7 @@ export class AppointmentHelper {
       // };
       const data: IUserAccount = docSnap.data() as IUserAccount;
 
-      const mapUser = await data.userList.map(async (user, idx) => {
+      const mapUser = await Promise.all(data.userList.map(async (user, idx) => {
         if (dto.userId == user.id) {
           const clinicData = clinic.docs[0].data() as IClinicAccount;
           const newUserAppointment: IUserAppointment = {
@@ -195,19 +195,21 @@ export class AppointmentHelper {
         }
 
         return user;
-      });
+      }));
+
       await updateDoc(docRef, {
         userList: mapUser,
       });
 
       const helper = new UserHelper();
-      const resData = helper.getUserById(accountId);
+      const resData = await helper.getUserById(accountId);
 
       return {
         appointmentId: newId,
         dto: resData,
       };
     } catch (ex) {
+      console.log('ex', ex);
       throw ex;
     }
   }

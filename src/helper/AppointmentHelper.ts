@@ -14,7 +14,11 @@ import { ClinicHelper } from './ClinicHelper';
 import { UserHelper } from './UserHelper';
 import { db } from '../model/entities/firebase';
 import { IClinicAccount, IUserAccount } from '../model/interfaces/db/IAccount';
-import { IAppointment, IUserAppointment, IClinicAppointment } from '../model/interfaces/db/IAppointment';
+import {
+  IAppointment,
+  IUserAppointment,
+  IClinicAppointment,
+} from '../model/interfaces/db/IAppointment';
 import { IClinic, IVaccineStock } from '../model/interfaces/db/IClinic';
 import { IVaccinationHistory } from '../model/interfaces/db/IUser';
 import { IBookAppointmentRequestDTO } from '../model/interfaces/requests/IBookAppointmentRequestDTO';
@@ -226,21 +230,23 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+      const patientData = await Promise.all(data.clinic.scheduledAppointments.map(async (app) => {
         if (app.id == appointmentId) {
           const helper = new ClinicHelper();
           const checkVax = data.clinic.availableVaccines.find(
             (v) => v.vaccine.id == app.vaccine.id,
           );
           if (checkVax) {
+            app.status = appointmentStatusTypes.scheduled;
+            count=count+1;
+            app.user.scheduledAppointments = [];
+            // console.log('app', app);
             const req: IVaccineStock = {
               ...checkVax,
               stock: checkVax.stock - 1,
             };
             await helper.modifyClinicVaccineAvailability(data.id, req);
           }
-          app.status = appointmentStatusTypes.scheduled;
-          count++;
 
           // update user
           const userData = await getDocs(
@@ -255,6 +261,7 @@ export class AppointmentHelper {
           const userRef = doc(db, 'MsAccount', userSnap.id);
           const u: IUserAccount = userSnap.data() as IUserAccount;
           var uCount = 0;
+
           const update = u.userList.map((um) => {
             if (um.id == app.user.id) {
               const updateAppointment = um.scheduledAppointments.map(
@@ -271,7 +278,7 @@ export class AppointmentHelper {
 
             return um;
           });
-
+          // console.log('user update', update);
           if (uCount == 0) {
             throw new UnauthorizedException('User Not Found');
           } else {
@@ -283,7 +290,7 @@ export class AppointmentHelper {
         }
 
         return app;
-      });
+      }));
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');
@@ -312,7 +319,7 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+      const patientData = await Promise.all(data.clinic.scheduledAppointments.map(async (app) => {
         if (app.id == appointmentId) {
           app.status = appointmentStatusTypes.completed;
           count++;
@@ -370,7 +377,7 @@ export class AppointmentHelper {
         }
 
         return app;
-      });
+      }));
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');
@@ -399,7 +406,7 @@ export class AppointmentHelper {
       const docRef = doc(db, 'MsAccount', docSnap.id);
       const data: IClinicAccount = docSnap.data() as IClinicAccount;
 
-      const patientData = data.clinic.scheduledAppointments.map(async (app) => {
+      const patientData = await Promise.all(data.clinic.scheduledAppointments.map(async (app) => {
         if (app.id == appointmentId) {
           app.status = appointmentStatusTypes.cancelled;
           count++;
@@ -445,7 +452,7 @@ export class AppointmentHelper {
         }
 
         return app;
-      });
+      }));
 
       if (count == 0) {
         throw new UnauthorizedException('Appointment Not Found');

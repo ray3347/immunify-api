@@ -151,7 +151,11 @@ export class ClinicHelper {
         const vaxSnap = vaccineData.docs[0];
         const vaxRef = doc(db, 'MsVaccine', vaxSnap.id);
         const vax: IVaccine = vaxSnap.data() as IVaccine;
-        const clinicInVax: IClinic = data.clinic;
+        const clinicInVax: IClinic = {
+          ...data.clinic,
+          availableVaccines: [],
+          scheduledAppointments: []
+        };
 
         await updateDoc(vaxRef, {
           availableAt: arrayUnion({

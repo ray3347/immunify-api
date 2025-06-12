@@ -148,7 +148,10 @@ export class AppointmentHelper {
         scheduledDate: dto.selectedDate,
         scheduledTime: dto.selectedStartTime,
         scheduledEndTime: toTimeString(endTime),
-        vaccine: dto.vaccine,
+        vaccine: {
+          ...dto.vaccine,
+          availableAt: []
+        },
       };
 
       // var clinicAppointment: IClinicAppointment = {
@@ -175,7 +178,10 @@ export class AppointmentHelper {
           const newClinicAppointment: IClinicAppointment = {
             ...newAppointment,
             userAccountId: accountId,
-            user: user,
+            user: {
+              ...user,
+              scheduledAppointments: []
+            },
           };
 
           user.scheduledAppointments.push(newUserAppointment);
@@ -193,14 +199,6 @@ export class AppointmentHelper {
       await updateDoc(docRef, {
         userList: mapUser,
       });
-
-      // const returnObj = await getDocs(
-      //   query(collection(db, 'MsAccount'), where('id', '==', accountId)),
-      // );
-
-      // const resSnap = returnObj.docs[0];
-      // const resRef = doc(db, 'MsAccount', resSnap.id);
-      // const resData: IUserAccount = resSnap.data() as IUserAccount;
 
       const helper = new UserHelper();
       const resData = helper.getUserById(accountId);
@@ -342,6 +340,7 @@ export class AppointmentHelper {
               const updateAppointment = um.scheduledAppointments.map(
                 (ua, id) => {
                   if (ua.id == appointmentId) {
+                    ua.vaccine.availableAt = [];
                     ua.status = appointmentStatusTypes.completed;
                     uCount++;
                   }
@@ -354,7 +353,10 @@ export class AppointmentHelper {
                 await this.generateVaccineCertificate(appointmentId);
               const newHistory: IVaccinationHistory = {
                 id: crypto.randomUUID(),
-                vaccine: app.vaccine,
+                vaccine: {
+                  ...app.vaccine,
+                  availableAt: []
+                },
                 vaccinationDate: new Date(),
                 doseNumber: 1,
                 certificateUri: certificateUri,

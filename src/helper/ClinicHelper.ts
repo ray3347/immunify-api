@@ -104,7 +104,7 @@ export class ClinicHelper {
         //   user.gender = dto.gender;
         // }
         // return user;
-        if (vax.id == dto.id) {
+        if (vax.vaccine.id == dto.vaccine.id) {
           vax.stock = dto.stock;
 
           // if 0 remove availability on vaccine
